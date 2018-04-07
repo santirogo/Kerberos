@@ -3,6 +3,7 @@ import java.security.Key;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import javax.crypto.spec.SecretKeySpec;
 
 
@@ -57,10 +58,13 @@ public class AS extends KDC{
     }
  
     public String generarTGT(int pos) throws Exception{ //En el tgt completamente cifrado
-        Calendar cal = Calendar.getInstance();
-        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-        String tiempo = sdf.format(cal.getTime()).toString();
-        
+//        Calendar cal = Calendar.getInstance();
+//        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+//        String tiempo = sdf.format(cal.getTime()).toString();
+//        cal.get(cal.MINUTE);
+        Date inicio = new Date();
+        String tiempo = ""+inicio.getTime();
+
         String kUserTgs = obtenerClaveUsuarioTGS(pos);
         String tgt = idUsuarios[pos]+","+ipUsuarios[pos]+","+tiempo+","+kUserTgs;
         
