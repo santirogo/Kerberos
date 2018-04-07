@@ -1,7 +1,10 @@
+package kerberitos;
+
 
 import java.security.Key;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
 import javax.crypto.spec.SecretKeySpec;
@@ -9,7 +12,6 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class AS extends KDC{
     private AES aes;
-    private String nombres [];
     private String idUsuarios [];
     private String ipUsuarios [];
     private ArrayList<Key> clavesUsuarios;
@@ -30,6 +32,9 @@ public class AS extends KDC{
             new byte[]{'E', 'v', 'e', 'c', 't', 'g', 's', 'S', 'e', 'c', 'r', 'e', 't', 'K', 'e', 'y'};
 
     public AS() throws Exception {
+        super();
+        this.clavesUsuarios = new ArrayList<Key>();
+        this.clavesUsuariosTGS = new ArrayList<Key>();
         clavesUsuarios.add(generateKey(aliceKey));
         clavesUsuarios.add(generateKey(bobKey));
         clavesUsuarios.add(generateKey(eveKey));
@@ -53,7 +58,7 @@ public class AS extends KDC{
     }
     
     public String obtenerClaveUsuarioTGS(int pos) throws Exception{
-         String kUserTgs = obtenerClaveUsuarioTGS(pos);
+         String kUserTgs = Base64.getEncoder().encodeToString(clavesUsuariosTGS.get(pos).getEncoded());
          return cifrarMensaje(this.clavesUsuarios.get(pos), kUserTgs);
     }
  
@@ -63,9 +68,9 @@ public class AS extends KDC{
 //        String tiempo = sdf.format(cal.getTime()).toString();
 //        cal.get(cal.MINUTE);
         Date inicio = new Date();
-        String tiempo = ""+inicio.getTime();
+        String tiempo = Long.toString(inicio.getTime());
 
-        String kUserTgs = obtenerClaveUsuarioTGS(pos);
+        String kUserTgs = Base64.getEncoder().encodeToString(clavesUsuariosTGS.get(pos).getEncoded());
         String tgt = idUsuarios[pos]+","+ipUsuarios[pos]+","+tiempo+","+kUserTgs;
         
         String cifrado1 = cifrarMensaje(this.ktgs, tgt); //Cifra con la ktgs

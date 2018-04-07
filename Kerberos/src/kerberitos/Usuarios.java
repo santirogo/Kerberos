@@ -1,6 +1,9 @@
+package kerberitos;
+
 
 import java.security.Key;
 import java.text.SimpleDateFormat;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
 import javax.crypto.spec.SecretKeySpec;
@@ -24,13 +27,15 @@ public class Usuarios {
         return this.aes.encrypt(mensaje, clave);
     }
     
-    public String descifrarMensaje(Key clave, String mensaje) throws Exception{
-        return this.aes.decrypt(mensaje, clave);
+    public String descifrarMensaje(String clave, String mensaje) throws Exception{
+        byte[] decodedKey = Base64.getDecoder().decode(clave);
+        Key key = new SecretKeySpec(decodedKey, 0, decodedKey.length, ALGO);
+        return this.aes.decrypt(mensaje, key);
     }
     
     public String generarMensajeAutenticacion() throws Exception{
         Date tiempo = new Date();
-        String envio = ""+tiempo.getTime();
+        String envio = Long.toString(tiempo.getTime());
         
         String mensaje = nombre +","+ envio;
         return cifrarMensaje(claveUsuario, nombre);
