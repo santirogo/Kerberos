@@ -22,7 +22,7 @@ public class TGS extends KDC{
     private static final String ALGO = "AES";
     private ArrayList<Key> clavesUsuariosServidor;
     private Key claveServidor;
-    final int PUERTO = 5001;
+    int PUERTO = 5001;
     ServerSocket serverSocket;
     Socket socket;
     private static final byte[] aliceKey =
@@ -111,7 +111,7 @@ public class TGS extends KDC{
             
             //Se realiza la verificacion del servicio
             System.out.println("");
-            System.out.println("Realizando verificacion del servicio...");
+            System.out.println("Realizando verificacion del servicio: "+tgtSeparado[1]);
             int verificacion = verificarServicio(tgtDestripado[0], tgtSeparado[1]);
             if(verificacion == -1){
                 System.out.println("El servicio no existe");
@@ -131,6 +131,10 @@ public class TGS extends KDC{
                         oos.writeObject(spt); //Enviamos SPT
                         oos.writeObject(mensajeSesion); //Enviamos llave Usuario-Servidor cifrada
                         
+                        if (tgtDestripado[0].equalsIgnoreCase("eve")) {
+                            this.PUERTO = 5002;
+                            initServer();
+                        }
                     }else if(verificacion == 0){
                         System.out.println("No tiene acceso al servicio");
                         oos.writeObject("No tiene acceso al servicio");

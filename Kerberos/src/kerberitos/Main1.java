@@ -13,6 +13,12 @@ public class Main1 {
         byte[] bobKey =
             new byte[]{'B', 'o', 'b', 'c', 'i', 't', 'o', 'S', 'e', 'c', 'r', 'e', 't', 'K', 'e', 'y'};
         
-        Usuarios alice = new Usuarios("alice","http",aliceKey);
+        byte[] eveKey =
+            new byte[]{'E', 'v', 'e', 'c', 'i', 't', 'a', 'S', 'e', 'c', 'r', 'e', 't', 'K', 'e', 'y'};
+        
+//        Usuarios alice = new Usuarios("alice","http",aliceKey);
+//        Usuarios bob = new Usuarios("bob", "web", bobKey);
+        Usuarios eve = new Usuarios("eve", "web", eveKey);
+        eve.cambiarServicio("http");
     }
 }

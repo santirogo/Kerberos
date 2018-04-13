@@ -21,13 +21,16 @@ public class Usuarios {
     private static final String ALGO = "AES";
     final String HOST = "localhost";
     final int PUERTO = 5000;
-    final int PUERTO2 = 5001;
+    int PUERTO2 = 5001;
     Socket socket;
     Socket socket2;
     ObjectOutputStream oos;
     ObjectInputStream ois;
     ObjectOutputStream oos2;
     ObjectInputStream ois2;
+    String tgt;
+    String mensajeAutenticacion;
+    Key claveUsuarioTGS;
     
     public Usuarios(String nombre, String servicio, byte clave[]) throws Exception {
         this.nombre = nombre;
@@ -41,6 +44,7 @@ public class Usuarios {
         try {
 
             socket = new Socket(HOST, PUERTO);
+            System.out.println(socket.getInetAddress());
             
             /*conectar a un servidor en localhost con puerto 5000*/
 
@@ -60,9 +64,9 @@ public class Usuarios {
             System.out.println("Mesaje recibido: "+primerMensaje);
             String claveUsuarioTGSstr = descifrarMensaje(claveUsuario, primerMensaje);
             System.out.println("Clave Usuario-TGS: "+claveUsuarioTGSstr);
-            Key claveUsuarioTGS = stringToKey(claveUsuarioTGSstr);
+            claveUsuarioTGS = stringToKey(claveUsuarioTGSstr);
             System.out.println("Generando mensaje de autenticion para TGS...");
-            String mensajeAutenticacion = generarMensajeAutenticacion(claveUsuarioTGS);
+            mensajeAutenticacion = generarMensajeAutenticacion(claveUsuarioTGS);
             
             //Segundo mensaje
             System.out.println("");
@@ -71,13 +75,23 @@ public class Usuarios {
             System.out.println("Segundo mensaje recibido: "+segundoMensaje);
             String tgtDescifrado = descifrarMensaje(claveUsuario, segundoMensaje);
             System.out.println("Mensaje descifrado (Pero aun cifrado con la clave del TGS): "+tgtDescifrado);
-            String tgt = generarMensajeTGT(tgtDescifrado, servicio);
+            this.tgt = generarMensajeTGT(tgtDescifrado, servicio);
             System.out.println("Generando TGT para TGS...");
             
             //cerramos la conexión
             ois.close();
             oos.close();
             socket.close();
+            
+            initClient2();
+
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+    
+    public void initClient2(){
+        try {
             
             //Conexion con TGS
             socket2 = new Socket(HOST, PUERTO2);
@@ -97,6 +111,9 @@ public class Usuarios {
             
             if (verificacionAutenticacion.equals("ok")) {
                 String verificacionServicio = (String) ois2.readObject();
+                if (!verificacionServicio.equalsIgnoreCase("Verificacion correcta")) {
+                    System.out.println("Estoy triste porque no puedo hablar con el servidor D':");
+                }
                 System.out.println(verificacionServicio);
                 if (verificacionServicio.equals("Verificacion correcta")) {
                     
@@ -121,7 +138,6 @@ public class Usuarios {
             ois2.close();
             oos2.close();
             socket2.close();
-
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
         }
@@ -157,6 +173,15 @@ public class Usuarios {
         return tgt + "!!!" + servicio;
     }
 
+    public void cambiarServicio(String servicio){
+        this.servicio = servicio;
+        this.PUERTO2 = 5002;
+        System.out.println("");
+        System.out.println("Cambiando servicio a "+servicio+"...");
+        System.out.println("");
+        initClient2();
+    }
+    
     private static Key generateKey(byte keyValue[]) throws Exception {
         return new SecretKeySpec(keyValue, ALGO);
     }
