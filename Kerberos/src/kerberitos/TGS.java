@@ -5,6 +5,10 @@
  */
 package kerberitos;
 
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.security.Key;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -18,6 +22,9 @@ public class TGS extends KDC{
     private static final String ALGO = "AES";
     private ArrayList<Key> clavesUsuariosServidor;
     private Key claveServidor;
+    final int PUERTO = 5001;
+    ServerSocket serverSocket;
+    Socket socket;
     private static final byte[] aliceKey =
             new byte[]{'A', 'l', 'i', 'S', 'e', 'r', 'v', 'S', 'e', 'c', 'r', 'e', 't', 'K', 'e', 'y'};
     private static final byte[] bobKey =
@@ -36,6 +43,93 @@ public class TGS extends KDC{
         this.clavesUsuariosServidor.add(generateKey(bobKey));
         this.clavesUsuariosServidor.add(generateKey(eveKey));
         this.claveServidor = generateKey(serverKey);
+        initServer();
+    }
+    
+    public void initServer() {
+
+        try {
+
+            serverSocket = new ServerSocket(PUERTO);/* crea socket servidor que escuchara en puerto 5000*/
+
+            socket = new Socket();
+
+            System.out.println("Esperando una conexión:");
+
+            socket = serverSocket.accept();
+            //Inicia el socket, ahora esta esperando una conexión por parte del cliente
+
+            System.out.println("Un cliente se ha conectado.");
+
+            //Canales de entrada y salida de datos
+            ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+            ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+
+            System.out.println("Confirmando conexion al cliente....");
+
+            //Recepcion TGT
+            String tgtCifrado = (String) ois.readObject();
+            String tgtSeparado [] = separarMensaje(tgtCifrado);
+            String tgtDestripado [] = destriparTGT(tgtSeparado[0]); //TGT descifrado
+            Key claveSesion = stringToKey(tgtDestripado[3]);
+            
+            //Recepcion client authenticator
+            String mensajeAutenticacionCifrado = (String) ois.readObject();
+            String mensajeAutenticacion [] = obtenerAutenticadorCliente(mensajeAutenticacionCifrado, claveSesion);
+            
+            
+            //Se realiza la autenticacion del cliente
+            int autenticacion = autenticacion(tgtDestripado[0], mensajeAutenticacion[0], tgtDestripado[2], mensajeAutenticacion[1]);
+            
+            if(autenticacion == -1){
+                oos.writeObject("Sesion supero el tiempo"); //Tiempo vencido
+                ois.close();
+                oos.close();
+                serverSocket.close();
+            }else{ 
+                if (autenticacion == 0) {
+                    oos.writeObject("Error de autenticacion"); //Nombres no coinciden
+                    ois.close();
+                    oos.close();
+                    serverSocket.close();
+                }else if(autenticacion == 1){
+                    oos.writeObject("ok"); //Autenticacion correcta
+                }
+            }
+            
+            //Se realiza la verificacion del servicio
+            int verificacion = verificarServicio(tgtDestripado[0], tgtSeparado[1]);
+            if(verificacion == -1){
+                oos.writeObject("El servicio no existe");
+            }else{
+                if (verificacion == -2) {
+                    oos.writeObject("La persona no existe");
+                }else{
+                    if(verificacion == 1){
+                        oos.writeObject("Verificacion correcta");
+                        
+                        String spt = generarSPT(tgtDestripado[0], tgtDestripado[1]);
+                        String mensajeSesion = generarMensajeSesion(tgtDestripado[0], claveSesion);
+                        
+                        oos.writeObject(spt); //Enviamos SPT
+                        oos.writeObject(mensajeSesion); //Enviamos llave Usuario-Servidor cifrada
+                        
+                    }else if(verificacion == 0){
+                        oos.writeObject("No tiene acceso al servicio");
+                        
+                    }
+                }
+            }
+
+            System.out.println("Cerrando conexión...");
+
+            ois.close();
+            oos.close();
+            serverSocket.close();//Aqui se cierra la conexión con el cliente
+
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        }
     }
     
     public String [] separarMensaje(String mensaje){
@@ -74,7 +168,7 @@ public class TGS extends KDC{
         return arreglito;
     }
     
-    public Key StringToKey(String clave){
+    public Key stringToKey(String clave){
         byte[] decodedKey = Base64.getDecoder().decode(clave);
         Key key = new SecretKeySpec(decodedKey, 0, decodedKey.length, ALGO);
         return key;
@@ -119,7 +213,7 @@ public class TGS extends KDC{
         
     }
     
-    public String enviarSPT(String id, String ip) throws Exception{
+    public String generarSPT(String id, String ip) throws Exception{
         
         Key claveEnviar = null;
         
@@ -134,7 +228,7 @@ public class TGS extends KDC{
         String clave = Base64.getEncoder().encodeToString(claveEnviar.getEncoded());
         
         
-        String mensaje = id+","+ip+",60"+clave;
+        String mensaje = id+","+ip+",60,"+clave;
         
         return cifrarMensaje(claveServidor, mensaje);
         
