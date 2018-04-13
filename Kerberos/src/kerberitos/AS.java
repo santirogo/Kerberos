@@ -75,22 +75,33 @@ public class AS extends KDC {
             System.out.println("Confirmando conexion al cliente....");
 
             //Recepcion id usuario
-            
+            System.out.println("");
+            System.out.println("Recibiendo mensaje del usuario...");
             String idUsuario = (String) ois.readObject();
+            System.out.println("Nombre del usuario: "+idUsuario);
             int id = buscarNombre(idUsuario);
             
+            System.out.println("");
             if(id == -1){
+                System.out.println("El usuario no existe");
                 ois.close();
                 oos.close();
                 serverSocket.close();
             }else{
                 //Envio Clave Sesión
+                System.out.println("Generando clave entre Usuario y TGS");
                 String claveUsuarioTGS = generarClaveUsuarioTGS(id);
+                System.out.println("Clave cifrada entre usuario y TGS: "+claveUsuarioTGS);
+                System.out.println("Enviando clave a usuario...");
                 oos.writeObject(claveUsuarioTGS);
                 oos.flush();
                 
                 //Envio TGT
+                System.out.println("");
+                System.out.println("Generando TGT...");
                 String tgt = generarTGT(id);
+                System.out.println("TGT: "+tgt);
+                System.out.println("Enviando TGT a usuario");
                 oos.writeObject(tgt);
                 oos.flush();
             }

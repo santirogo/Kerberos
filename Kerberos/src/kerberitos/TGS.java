@@ -68,44 +68,61 @@ public class TGS extends KDC{
             System.out.println("Confirmando conexion al cliente....");
 
             //Recepcion TGT
+            System.out.println("");
+            System.out.println("Recibiendo mensaje desde usuario...");
             String tgtCifrado = (String) ois.readObject();
+            System.out.println("servicio y TGT cifrado: "+tgtCifrado);
             String tgtSeparado [] = separarMensaje(tgtCifrado);
             String tgtDestripado [] = destriparTGT(tgtSeparado[0]); //TGT descifrado
+            System.out.println("Obteniendo clave de usuario y TGS...");
+            System.out.println("Clave: "+tgtDestripado[3]);
             Key claveSesion = stringToKey(tgtDestripado[3]);
             
             //Recepcion client authenticator
+            System.out.println("");
+            System.out.println("Recibiendo mensaje desde usuario...");
             String mensajeAutenticacionCifrado = (String) ois.readObject();
+            System.out.println("Mensaje de autenticacion cifrado: "+mensajeAutenticacionCifrado);
             String mensajeAutenticacion [] = obtenerAutenticadorCliente(mensajeAutenticacionCifrado, claveSesion);
             
-            
+            System.out.println("");
+            System.out.println("Realizando la autenticación del cliente...");
             //Se realiza la autenticacion del cliente
             int autenticacion = autenticacion(tgtDestripado[0], mensajeAutenticacion[0], tgtDestripado[2], mensajeAutenticacion[1]);
             
             if(autenticacion == -1){
+                System.out.println("Sesion supero el tiempo");
                 oos.writeObject("Sesion supero el tiempo"); //Tiempo vencido
                 ois.close();
                 oos.close();
                 serverSocket.close();
             }else{ 
                 if (autenticacion == 0) {
+                    System.out.println("Error de autenticacion");
                     oos.writeObject("Error de autenticacion"); //Nombres no coinciden
                     ois.close();
                     oos.close();
                     serverSocket.close();
                 }else if(autenticacion == 1){
+                    System.out.println("Autenticacion correcta");
                     oos.writeObject("ok"); //Autenticacion correcta
                 }
             }
             
             //Se realiza la verificacion del servicio
+            System.out.println("");
+            System.out.println("Realizando verificacion del servicio...");
             int verificacion = verificarServicio(tgtDestripado[0], tgtSeparado[1]);
             if(verificacion == -1){
+                System.out.println("El servicio no existe");
                 oos.writeObject("El servicio no existe");
             }else{
                 if (verificacion == -2) {
+                    System.out.println("La persona no existe");
                     oos.writeObject("La persona no existe");
                 }else{
                     if(verificacion == 1){
+                        System.out.println("Verificacion correcta");
                         oos.writeObject("Verificacion correcta");
                         
                         String spt = generarSPT(tgtDestripado[0], tgtDestripado[1]);
@@ -115,12 +132,14 @@ public class TGS extends KDC{
                         oos.writeObject(mensajeSesion); //Enviamos llave Usuario-Servidor cifrada
                         
                     }else if(verificacion == 0){
+                        System.out.println("No tiene acceso al servicio");
                         oos.writeObject("No tiene acceso al servicio");
                         
                     }
                 }
             }
 
+            System.out.println("");
             System.out.println("Cerrando conexión...");
 
             ois.close();

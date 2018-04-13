@@ -50,18 +50,29 @@ public class Usuarios {
             ois = new ObjectInputStream(socket.getInputStream());
             
             //enviamos el mensaje
+            System.out.println("Enviando nombre a AS");
             oos.writeObject(generarNombre());
             
             //Primer mensaje
+            System.out.println("");
+            System.out.println("Recibiendo mensaje de AS...");
             String primerMensaje = (String) ois.readObject();
+            System.out.println("Mesaje recibido: "+primerMensaje);
             String claveUsuarioTGSstr = descifrarMensaje(claveUsuario, primerMensaje);
+            System.out.println("Clave Usuario-TGS: "+claveUsuarioTGSstr);
             Key claveUsuarioTGS = stringToKey(claveUsuarioTGSstr);
+            System.out.println("Generando mensaje de autenticion para TGS...");
             String mensajeAutenticacion = generarMensajeAutenticacion(claveUsuarioTGS);
             
             //Segundo mensaje
+            System.out.println("");
+            System.out.println("Recibiendo otro mensaje de AS");
             String segundoMensaje = (String) ois.readObject();
+            System.out.println("Segundo mensaje recibido: "+segundoMensaje);
             String tgtDescifrado = descifrarMensaje(claveUsuario, segundoMensaje);
+            System.out.println("Mensaje descifrado (Pero aun cifrado con la clave del TGS): "+tgtDescifrado);
             String tgt = generarMensajeTGT(tgtDescifrado, servicio);
+            System.out.println("Generando TGT para TGS...");
             
             //cerramos la conexión
             ois.close();
@@ -72,10 +83,15 @@ public class Usuarios {
             socket2 = new Socket(HOST, PUERTO2);
             oos2 = new ObjectOutputStream(socket2.getOutputStream());
             ois2 = new ObjectInputStream(socket2.getInputStream());
-
-            oos2.writeObject(tgt); //Enviamos TGT a TGS
-            oos2.writeObject(mensajeAutenticacion); //Enviamos a TGS el client authenticator
             
+            System.out.println("");
+            oos2.writeObject(tgt); //Enviamos TGT a TGS
+            System.out.println("Enviando TGT a TGS...");
+            oos2.writeObject(mensajeAutenticacion); //Enviamos a TGS el client authenticator
+            System.out.println("Enviando mensaje de autenticacion a TGS...");
+            
+            System.out.println("");
+            System.out.println("Verificando autenticacion...");
             String verificacionAutenticacion = (String) ois2.readObject();
             System.out.println(verificacionAutenticacion);
             
@@ -83,11 +99,20 @@ public class Usuarios {
                 String verificacionServicio = (String) ois2.readObject();
                 System.out.println(verificacionServicio);
                 if (verificacionServicio.equals("Verificacion correcta")) {
-                    String sptCifrado = (String) ois2.readObject();
                     
+                    System.out.println("");
+                    System.out.println("Recibiendo mensaje desde TGS...");
+                    String sptCifrado = (String) ois2.readObject();
+                    System.out.println("SPT cifrado: "+sptCifrado);
+                    
+                    System.out.println("Recibiendo mensaje desde TGS...");
                     String mensajeSesionCifrado = (String) ois2.readObject();
+                    System.out.println("Mensaje de sesion cifrado: "+mensajeSesionCifrado);
                     String mensajeSesionDescifrado = descifrarMensaje(claveUsuarioTGS, mensajeSesionCifrado);
-                    System.out.println("La clave con el servido es: "+mensajeSesionDescifrado);
+                    System.out.println("Mensaje de sesion descifrado: "+mensajeSesionDescifrado);
+                    
+                    System.out.println("");
+                    System.out.println("La clave con el servidor es: "+mensajeSesionDescifrado);
                     System.out.println("Estoy feliz porque puedo hablar con el servidor :D");
                 }
             }

@@ -13,6 +13,6 @@ public class Main1 {
         byte[] bobKey =
             new byte[]{'B', 'o', 'b', 'c', 'i', 't', 'o', 'S', 'e', 'c', 'r', 'e', 't', 'K', 'e', 'y'};
         
-        Usuarios alice = new Usuarios("alice","web",aliceKey);
+        Usuarios alice = new Usuarios("alice","http",aliceKey);
     }
 }
