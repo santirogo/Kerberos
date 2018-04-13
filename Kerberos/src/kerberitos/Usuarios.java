@@ -37,10 +37,10 @@ public class Usuarios {
         this.servicio = servicio;
         this.claveUsuario = generateKey(clave);
         this.aes = new AES();
-        initClient();
+        comunicacionConAS();
     }
 
-    public void initClient() {
+    public void comunicacionConAS() {
         try {
 
             socket = new Socket(HOST, PUERTO);
@@ -83,14 +83,14 @@ public class Usuarios {
             oos.close();
             socket.close();
             
-            initClient2();
+            comunicacionConTGS();
 
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
         }
     }
     
-    public void initClient2(){
+    public void comunicacionConTGS(){
         try {
             
             //Conexion con TGS
@@ -179,7 +179,7 @@ public class Usuarios {
         System.out.println("");
         System.out.println("Cambiando servicio a "+servicio+"...");
         System.out.println("");
-        initClient2();
+        comunicacionConTGS();
     }
     
     private static Key generateKey(byte keyValue[]) throws Exception {
